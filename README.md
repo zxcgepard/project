@@ -11,4 +11,4 @@ Telegram Кулинарный Бот
 - Python
 - pyTelegramBotAPI
 - Ollama (нейросеть Qwen 2.5 3B)
-- Ubuntu 22.04
+- Операционная сиситема сервера - Ubuntu 22.04
