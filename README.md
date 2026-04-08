@@ -12,8 +12,3 @@ Telegram Кулинарный Бот
 - pyTelegramBotAPI
 - Ollama (нейросеть Qwen 2.5 3B)
 - Ubuntu 22.04
-
-Установка и запуск
-2. Установить зависимости: `pip install -r requirements.txt`
-3. Запустить бота: `python3 bot.py`
-
