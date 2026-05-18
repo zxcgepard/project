@@ -2,7 +2,7 @@ import telebot
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton
 import requests
 
-bot = telebot.TeleBot('8172308599:AAEuJ9Zd3vVETx18Ozi6fGuEMJ60cGWDmvk')
+bot = telebot.TeleBot('TOKEN')
 
 def menu():
     kb = ReplyKeyboardMarkup(resize_keyboard=True)
