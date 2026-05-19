@@ -53,7 +53,7 @@ def start(msg):
 
 @bot.message_handler(func=lambda m: m.text == 'На ужин')
 def din(m):
-    bot.send_message(m.chat.id, "Секунду, процесс может занять где-то 2 минуты")
+    bot.send_message(m.chat.id, "Хорошо выполняю")
     bot.send_message(m.chat.id, get_recipe("ужин"))
 
 @bot.message_handler(func=lambda m: m.text == 'Десерт')
@@ -84,6 +84,6 @@ def text(msg):
             "Я понимаю только продукты. Пример: картошка, лук, яйца",
             reply_markup=menu()
         )
-
+#test
 
 bot.polling(none_stop=True)
