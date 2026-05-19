@@ -2,7 +2,8 @@ import telebot
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton
 import requests
 
-bot = telebot.TeleBot('TOKEN')
+BOT_TOKEN = '8172308599:AAEuJ9Zd3vVETx18Ozi6fGuEMJ60cGWDmvk'
+bot = telebot.TeleBot(BOT_TOKEN)
 
 def menu():
     kb = ReplyKeyboardMarkup(resize_keyboard=True)
@@ -14,7 +15,7 @@ def menu():
     )
     return kb
 
-food = ['лук', 'картошка', 'морковь', 'свекла', 'капуста', 'мясо', 'курица', 
+food = ['лук', 'картошка', 'морковь', 'свекла', 'капуста', 'мясо', 'курица',
         'яйца', 'молоко', 'сыр', 'масло', 'мука', 'сахар', 'соль', 'помидоры',
         'огурцы', 'чеснок', 'рыба', 'гречка', 'рис', 'макароны']
 
@@ -23,67 +24,78 @@ def has_food(text):
     for item in food:
         if item in text:
             return True
-    return False
+        return False
 
 def get_recipe(q):
     try:
         r = requests.post('http://localhost:11434/api/generate', json={
-            "model": "qwen2.5:3b",
-            "prompt": f"""Ты профессиональный повар. Напиши настоящий рецепт на русском языке.
-Запрещено: выдумывать странные ингредиенты, писать бессмысленный текст.
-Требования: рецепт должен быть реальным, ингредиенты настоящими, шаги понятными.
-Не задавай уточняющих вопросов. Просто дай рецепт.
-Формат ответа:
-НАЗВАНИЕ: ...
-ИНГРЕДИЕНТЫ: ...
-ПРИГОТОВЛЕНИЕ: ...
-
-Запрос пользователя: {q}""",
+            "model": "gemma2:2b",
+            "prompt": f"Напиши рецепт на русском языке: {q}",
             "stream": False
         })
-        return r.json()['response']
-    except:
-        return "Ошибка! Ollama не запущена"
+        raw_recipe = r.json()['response']
+        return clean_markdown(raw_recipe)
+    except Exception as e:
+        return f"Ошибка: {e}"
 
 @bot.message_handler(commands=['start'])
 def start(msg):
-    bot.send_message(msg.chat.id, f"Привет, {msg.from_user.first_name}!",
-        reply_markup=menu()
-    )
+    bot.send_message(msg.chat.id, f"Привет, {msg.from_user.first_name}! Я кулинарный бот.", reply_markup=menu())
 
 @bot.message_handler(func=lambda m: m.text == 'На ужин')
-def din(m):
-    bot.send_message(m.chat.id, "Хорошо выполняю")
-    bot.send_message(m.chat.id, get_recipe("ужин"))
+@bot.message_handler(func=lambda m: m.text == 'На ужин')
+def dinner(m):
+    bot.send_message(m.chat.id, "Секунду, процесс может занять где-то 2-3 минуты")
+    bot.send_message(m.chat.id, get_recipe("ужин из простых продуктов"))
 
 @bot.message_handler(func=lambda m: m.text == 'Десерт')
-def des(m):
-    bot.send_message(m.chat.id, "Секунду, процесс может занять где-то 2 минуты")
-    bot.send_message(m.chat.id, get_recipe("десерт"))
+def dessert(m):
+    bot.send_message(m.chat.id, "Секунду, процесс может занять где-то 2-3 минуты")
+    bot.send_message(m.chat.id, get_recipe("простой десерт"))
 
 @bot.message_handler(func=lambda m: m.text == 'Случайный')
-def ran(m):
-    bot.send_message(m.chat.id, "Секунду, процесс может занять где-то 2 минуты")
+def random_recipe(m):
+    bot.send_message(m.chat.id, "Секунду, процесс может занять где-то 2-3 минуты")
     bot.send_message(m.chat.id, get_recipe("любое блюдо"))
 
 @bot.message_handler(func=lambda m: m.text == 'Ввести словами')
-def ask(m):
-    bot.send_message(m.chat.id, "Напиши продукты через запятую")
+def ask_products(m):
+    bot.send_message(m.chat.id, "Напиши продукты через запятую, например: картошка, лук, яйца")
 
 @bot.message_handler(func=lambda m: True)
-def text(msg):
+def handle_text(msg):
     if msg.text.startswith('/'):
         return
-
     if has_food(msg.text):
-        bot.send_message(msg.chat.id, f"Ищу: {msg.text}...")
+        bot.send_message(msg.chat.id, f"Секунду, процесс может занять где-то 2-3 минуты .Ищу рецепт из: {msg.text}...")
         bot.send_message(msg.chat.id, get_recipe(msg.text))
     else:
-        bot.send_message(
-            msg.chat.id,
-            "Я понимаю только продукты. Пример: картошка, лук, яйца",
-            reply_markup=menu()
-        )
-#test
-# fix ssh key
-bot.polling(none_stop=True)
+        bot.send_message(msg.chat.id, "Я понимаю только продукты. Пример: картошка, лук, яйца", reply_markup=menu())
+
+
+
+
+import re
+
+def clean_recipe(text):
+    text = text.replace('*', '')
+    english_words = ['Dill', 'Bay leaf', 'sour cream', 'épaissit', 'chicken', 'beef', 'apple', 'pepper', 'salt', 'sugar', 'milk', 'butter', 'egg', 'cheese', 'cream', 'water', 'pimienta', 'Olivenöl', 'Oliven', 'öl']
+    for word in english_words:
+       text = text.replace(word, '')
+    text = re.sub(r'\s+', ' ', text)
+    return text.strip()
+
+
+import re
+
+def clean_markdown(text):
+    text = re.sub(r'\*\*(.*?)\*\*', r'\1', text)
+    text = re.sub(r'\*(.*?)\*', r'\1', text)
+    text = re.sub(r'__(.*?)__', r'\1', text)
+    text = re.sub(r'_(.*?)_', r'\1', text)
+    text = re.sub(r'^\*\s+', '- ', text, flags=re.MULTILINE)
+    return text
+
+if __name__ == '__main__':
+    print("Бот запущен...")
+    bot.polling(none_stop=True)
