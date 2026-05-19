@@ -19,7 +19,8 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             cd /opt/mybot
-            git pull origin main
+            git fetch origin
+            git reset --hard origin/main
             docker stop mybot || true
             docker rm mybot || true
             docker build -t mybot .
