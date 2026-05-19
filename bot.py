@@ -4,7 +4,7 @@ import requests
 
 BOT_TOKEN = '8172308599:AAEuJ9Zd3vVETx18Ozi6fGuEMJ60cGWDmvk'
 bot = telebot.TeleBot(BOT_TOKEN)
-
+bot.api_url = 'https://149.154.167.99/bot'
 def menu():
     kb = ReplyKeyboardMarkup(resize_keyboard=True)
     kb.add(
