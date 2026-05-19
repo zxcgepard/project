@@ -43,19 +43,18 @@ def start(msg):
     bot.send_message(msg.chat.id, f"Привет, {msg.from_user.first_name}! Я кулинарный бот.", reply_markup=menu())
 
 @bot.message_handler(func=lambda m: m.text == 'На ужин')
-@bot.message_handler(func=lambda m: m.text == 'На ужин')
 def dinner(m):
-    bot.send_message(m.chat.id, "Секунду, процесс может занять где-то 2-3 минуты")
+    bot.send_message(m.chat.id, "Секунду, процесс может занять где-то 1 минуты")
     bot.send_message(m.chat.id, get_recipe("ужин из простых продуктов"))
 
 @bot.message_handler(func=lambda m: m.text == 'Десерт')
 def dessert(m):
-    bot.send_message(m.chat.id, "Секунду, процесс может занять где-то 2-3 минуты")
+    bot.send_message(m.chat.id, "Секунду, процесс может занять где-то 1 минуты")
     bot.send_message(m.chat.id, get_recipe("простой десерт"))
 
 @bot.message_handler(func=lambda m: m.text == 'Случайный')
 def random_recipe(m):
-    bot.send_message(m.chat.id, "Секунду, процесс может занять где-то 2-3 минуты")
+    bot.send_message(m.chat.id, "Секунду, процесс может занять где-то 1 минуты")
     bot.send_message(m.chat.id, get_recipe("любое блюдо"))
 
 @bot.message_handler(func=lambda m: m.text == 'Ввести словами')
@@ -67,7 +66,7 @@ def handle_text(msg):
     if msg.text.startswith('/'):
         return
     if has_food(msg.text):
-        bot.send_message(msg.chat.id, f"Секунду, процесс может занять где-то 2-3 минуты .Ищу рецепт из: {msg.text}...")
+        bot.send_message(msg.chat.id, f"Секунду, процесс может занять где-то 1 минуты .Ищу рецепт из: {msg.text}...")
         bot.send_message(msg.chat.id, get_recipe(msg.text))
     else:
         bot.send_message(msg.chat.id, "Я понимаю только продукты. Пример: картошка, лук, яйца", reply_markup=menu())
