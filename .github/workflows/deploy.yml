@@ -22,6 +22,6 @@ jobs:
             git fetch origin
             git reset --hard origin/main
             docker stop mybot || true
-            docker rm mybot || true
             docker build -t mybot .
+            docker rm -f mybot || true
             docker run -d --restart always --network host --name mybot mybot
