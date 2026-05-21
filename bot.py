@@ -28,7 +28,7 @@ def has_food(text):
     for item in food:
         if item in text:
             return True
-        return False
+    return False
 
 def get_recipe(q):
     try:
