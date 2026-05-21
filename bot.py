@@ -1,8 +1,11 @@
 import telebot
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton
 import requests
+import os
+from dotenv import load_dotenv
 
-BOT_TOKEN = '8172308599:AAGeUzhSVSlSbUzMJjmXTCETxedCmZO6YcQ'
+load_dotenv()
+BOT_TOKEN = os.getenv('8172308599:AAGeUzhSVSlSbUzMJjmXTCETxedCmZO6YcQ')
 bot = telebot.TeleBot(BOT_TOKEN)
 def menu():
     kb = ReplyKeyboardMarkup(resize_keyboard=True)
