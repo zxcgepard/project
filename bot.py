@@ -30,53 +30,6 @@ def has_food(text):
             return True
     return False
 
-def clean_markdown(text):
-    text = re.sub(r'\*\*(.*?)\*\*', r'\1', text)
-    text = re.sub(r'\*(.*?)\*', r'\1', text)
-    text = re.sub(r'__(.*?)__', r'\1', text)
-    text = re.sub(r'_(.*?)_', r'\1', text)
-    text = re.sub(r'^\*\s+', '- ', text, flags=re.MULTILINE)
-    return text
-
-def clean_recipe(text):
-    text = re.sub(r'[^\w\s\.,!?\-0-9А-Яа-яЁё]', '', text)
-    text = re.sub(r'\*\*(.*?)\*\*', r'\1', text)
-    text = re.sub(r'\*(.*?)\*', r'\1', text)
-    text = re.sub(r'__(.*?)__', r'\1', text)
-    text = re.sub(r'_(.*?)_', r'\1', text)
-    
-    english_words = ['Dill', 'Bay leaf', 'sour cream', 'épaissit', 'chicken', 'beef',
-                     'apple', 'pepper', 'salt', 'sugar', 'milk', 'butter', 'egg',
-                     'cheese', 'cream', 'water', 'pimienta', 'Olivenöl', 'Oliven', 'öl']
-    for word in english_words:
-        text = text.replace(word, '')
-    
-    lines = text.split('\n')
-    new_lines = []
-    step_num = 1
-    
-    for line in lines:
-        line = line.strip()
-        if not line:
-            continue
-        
-        if re.match(r'^\d+[\.\)]', line):
-            line = re.sub(r',\s*\d+[\.\)]\s*', ', ', line)
-            new_lines.append(line)
-        elif line.startswith('-') or line.startswith('*'):
-            line = line[1:].strip()
-            new_lines.append(f"{step_num}) {line}")
-            step_num += 1
-        elif re.search(r'\d+\s*(г|кг|мл|стакан|ст\.|ложка)', line):
-            new_lines.append(f"{step_num}) {line}")
-            step_num += 1
-        else:
-            new_lines.append(f"{step_num}) {line}")
-            step_num += 1
-    
-    text = '\n'.join(new_lines)
-    text = re.sub(r'\s+', ' ', text)
-    return text.strip()
 
 def get_recipe(q):
     try:
@@ -137,6 +90,56 @@ def handle_text(msg):
         bot.send_message(msg.chat.id, get_recipe(msg.text))
     else:
         bot.send_message(msg.chat.id, "Я понимаю только продукты. Пример: картошка, лук, яйца", reply_markup=menu())
+
+        
+
+def clean_markdown(text):
+    text = re.sub(r'\*\*(.*?)\*\*', r'\1', text)
+    text = re.sub(r'\*(.*?)\*', r'\1', text)
+    text = re.sub(r'__(.*?)__', r'\1', text)
+    text = re.sub(r'_(.*?)_', r'\1', text)
+    text = re.sub(r'^\*\s+', '- ', text, flags=re.MULTILINE)
+    return text
+
+def clean_recipe(text):
+    text = re.sub(r'[^\w\s\.,!?\-0-9А-Яа-яЁё]', '', text)
+    text = re.sub(r'\*\*(.*?)\*\*', r'\1', text)
+    text = re.sub(r'\*(.*?)\*', r'\1', text)
+    text = re.sub(r'__(.*?)__', r'\1', text)
+    text = re.sub(r'_(.*?)_', r'\1', text)
+    
+    english_words = ['Dill', 'Bay leaf', 'sour cream', 'épaissit', 'chicken', 'beef',
+                     'apple', 'pepper', 'salt', 'sugar', 'milk', 'butter', 'egg',
+                     'cheese', 'cream', 'water', 'pimienta', 'Olivenöl', 'Oliven', 'öl']
+    for word in english_words:
+        text = text.replace(word, '')
+    
+    lines = text.split('\n')
+    new_lines = []
+    step_num = 1
+    
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        
+        if re.match(r'^\d+[\.\)]', line):
+            line = re.sub(r',\s*\d+[\.\)]\s*', ', ', line)
+            new_lines.append(line)
+        elif line.startswith('-') or line.startswith('*'):
+            line = line[1:].strip()
+            new_lines.append(f"{step_num}) {line}")
+            step_num += 1
+        elif re.search(r'\d+\s*(г|кг|мл|стакан|ст\.|ложка)', line):
+            new_lines.append(f"{step_num}) {line}")
+            step_num += 1
+        else:
+            new_lines.append(f"{step_num}) {line}")
+            step_num += 1
+    
+    text = '\n'.join(new_lines)
+    text = re.sub(r'\s+', ' ', text)
+    return text.strip()
 
 if __name__ == '__main__':
     print("Бот запущен...")
