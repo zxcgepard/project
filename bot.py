@@ -1,84 +1,75 @@
 import telebot
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton
 import subprocess
-import random
-import re
 
 BOT_TOKEN = '8172308599:AAEuJ9Zd3vVETx18Ozi6fGuEMJ60cGWDmvk'
 bot = telebot.TeleBot(BOT_TOKEN)
 
-def main_menu():
-    keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
-    keyboard.add(
+def menu():
+    kb = ReplyKeyboardMarkup(resize_keyboard=True)
+    kb.add(
         KeyboardButton('На ужин'),
         KeyboardButton('Десерт'),
         KeyboardButton('Случайный'),
         KeyboardButton('Ввести словами')
     )
-    return keyboard
+    return kb
 
 def get_recipe_from_book(user_query):
     try:
         result = subprocess.run(
-            ['python3', '/opt/simple-rag-script/rag.py', '--query', user_query],
+            ['python3', '/opt/rag-recipes/rag_search.py', user_query],
             capture_output=True,
             text=True,
-            timeout=60
+            timeout=90
         )
         if result.returncode == 0 and result.stdout.strip():
             return result.stdout.strip()
         else:
             return "Рецепт не найден. Попробуйте другие ключевые слова."
-    except Exception as error:
-        return f"Ошибка поиска: {error}"
-
-def get_random_recipe():
-    try:
-        with open('/opt/simple-rag-script/documents/pokhlebkin.txt', 'r', encoding='utf-8') as file:
-            content = file.read()
-        recipes = content.split('\n\n')
-        random_recipe = random.choice(recipes).strip()
-        return random_recipe if random_recipe else "Не удалось найти случайный рецепт"
-    except Exception as error:
-        return f"Ошибка: {error}"
+    except Exception as e:
+        return f"Ошибка поиска: {e}"
 
 @bot.message_handler(commands=['start'])
-def welcome(message):
-    bot.send_message(message.chat.id, f"Привет, {message.from_user.first_name}! Я кулинарный бот. Рецепты беру из книги Похлёбкина.", reply_markup=main_menu())
+def start(message):
+    bot.send_message(
+        message.chat.id,
+        f"Привет, {message.from_user.first_name}! Я кулинарный бот. Рецепты беру из книги Похлёбкина.",
+        reply_markup=menu()
+    )
 
-@bot.message_handler(func=lambda message: message.text == 'На ужин')
-def dinner(message):
-    bot.send_message(message.chat.id, "Ищу рецепт для ужина...")
+@bot.message_handler(func=lambda m: m.text == 'На ужин')
+def dinner(m):
+    bot.send_message(m.chat.id, "Ищу рецепт для ужина...")
     recipe = get_recipe_from_book("ужин")
-    bot.send_message(message.chat.id, recipe)
+    bot.send_message(m.chat.id, recipe)
 
-@bot.message_handler(func=lambda message: message.text == 'Десерт')
-def dessert(message):
-    bot.send_message(message.chat.id, "Ищу десерт...")
+@bot.message_handler(func=lambda m: m.text == 'Десерт')
+def dessert(m):
+    bot.send_message(m.chat.id, "Ищу десерт...")
     recipe = get_recipe_from_book("десерт")
-    bot.send_message(message.chat.id, recipe)
+    bot.send_message(m.chat.id, recipe)
 
-@bot.message_handler(func=lambda message: message.text == 'Случайный')
-def random_recipe(message):
-    bot.send_message(message.chat.id, "Выбираю случайный рецепт...")
-    recipe = get_random_recipe()
-    bot.send_message(message.chat.id, recipe)
+@bot.message_handler(func=lambda m: m.text == 'Случайный')
+def random_recipe(m):
+    bot.send_message(m.chat.id, "Выбираю случайный рецепт...")
+    recipe = get_recipe_from_book("случайный")
+    bot.send_message(m.chat.id, recipe)
 
-@bot.message_handler(func=lambda message: message.text == 'Ввести словами')
-def ask_ingredients(message):
-    bot.send_message(message.chat.id, "Напиши блюдо или ингредиенты, например: борщ, блины, картошка")
+@bot.message_handler(func=lambda m: m.text == 'Ввести словами')
+def ask_products(m):
+    bot.send_message(m.chat.id, "Напиши блюдо или ингредиенты, например: борщ, блины, картошка")
 
-@bot.message_handler(func=lambda message: True)
-def handle_text(message):
-    if message.text.startswith('/'):
+@bot.message_handler(func=lambda m: True)
+def handle_text(m):
+    if m.text.startswith('/'):
         return
-    if message.text in ['На ужин', 'Десерт', 'Случайный', 'Ввести словами']:
+    if m.text in ['На ужин', 'Десерт', 'Случайный', 'Ввести словами']:
         return
-    
-    bot.send_message(message.chat.id, f"Ищу: {message.text}...")
-    recipe = get_recipe_from_book(message.text)
-    bot.send_message(message.chat.id, recipe)
+    bot.send_message(m.chat.id, f"Ищу: {m.text}...")
+    recipe = get_recipe_from_book(m.text)
+    bot.send_message(m.chat.id, recipe)
 
 if __name__ == '__main__':
-    print("Бот запущен и работает с книгой рецептов")
+    print("Бот запущен с RAG-поиском по книге")
     bot.polling(none_stop=True)
