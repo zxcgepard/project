@@ -82,7 +82,20 @@ def get_recipe(q):
     try:
         r = requests.post('http://localhost:11434/api/generate', json={
             "model": "qwen2.5:3b",
-            "prompt": f"Ты шеф-повар. Напиши рецепт на русском языке: {q}. Название, ингредиенты, шаги. Без английских слов и иероглифов.",
+            "prompt": f""""Ты шеф-повар. Напиши рецепт строго на русском языке и строго в формате:
+
+НАЗВАНИЕ: ...
+ИНГРЕДИЕНТЫ:
+1) ингредиент
+2) ингредиент
+
+ПРИГОТОВЛЕНИЕ:
+1) действие
+2) действие
+
+Запрос: {q}
+
+Не нумеруй строки внутри ингредиентов и шагов. Только каждый отдельный пункт.""",
             "stream": False
         })
         raw_recipe = r.json()['response']
@@ -96,17 +109,17 @@ def start(msg):
 
 @bot.message_handler(func=lambda m: m.text == 'На ужин')
 def dinner(m):
-    bot.send_message(m.chat.id, "Секунду, процесс может занять около минуты")
+    bot.send_message(m.chat.id, "Секунду, процесс может занять 3 минуты")
     bot.send_message(m.chat.id, get_recipe("ужин из простых продуктов"))
 
 @bot.message_handler(func=lambda m: m.text == 'Десерт')
 def dessert(m):
-    bot.send_message(m.chat.id, "Секунду, процесс может занять около минуты")
+    bot.send_message(m.chat.id, "Секунду, процесс может занять 3 минуты")
     bot.send_message(m.chat.id, get_recipe("простой десерт"))
 
 @bot.message_handler(func=lambda m: m.text == 'Случайный')
 def random_recipe(m):
-    bot.send_message(m.chat.id, "Секунду, процесс может занять около минуты")
+    bot.send_message(m.chat.id, "Секунду, процесс может занять 3 минуты")
     bot.send_message(m.chat.id, get_recipe("любое блюдо"))
 
 @bot.message_handler(func=lambda m: m.text == 'Ввести словами')
