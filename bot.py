@@ -1,100 +1,84 @@
 import telebot
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton
-import requests
+import subprocess
+import random
+import re
 
 BOT_TOKEN = '8172308599:AAEuJ9Zd3vVETx18Ozi6fGuEMJ60cGWDmvk'
 bot = telebot.TeleBot(BOT_TOKEN)
-bot.api_url = 'https://149.154.167.99/bot'
-def menu():
-    kb = ReplyKeyboardMarkup(resize_keyboard=True)
-    kb.add(
+
+def main_menu():
+    keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
+    keyboard.add(
         KeyboardButton('На ужин'),
         KeyboardButton('Десерт'),
         KeyboardButton('Случайный'),
         KeyboardButton('Ввести словами')
     )
-    return kb
+    return keyboard
 
-food = ['лук', 'картошка', 'морковь', 'свекла', 'капуста', 'мясо', 'курица',
-        'яйца', 'молоко', 'сыр', 'масло', 'мука', 'сахар', 'соль', 'помидоры',
-        'огурцы', 'чеснок', 'рыба', 'гречка', 'рис', 'макароны']
-
-def has_food(text):
-    text = text.lower()
-    for item in food:
-        if item in text:
-            return True
-        return False
-
-def get_recipe(q):
+def get_recipe_from_book(user_query):
     try:
-        r = requests.post('http://localhost:11434/api/generate', json={
-            "model": "gemma2:2b",
-            "prompt": f"Напиши рецепт на русском языке: {q}",
-            "stream": False
-        })
-        raw_recipe = r.json()['response']
-        return clean_markdown(raw_recipe)
-    except Exception as e:
-        return f"Ошибка: {e}"
+        result = subprocess.run(
+            ['python3', '/opt/simple-rag-script/rag.py', '--query', user_query],
+            capture_output=True,
+            text=True,
+            timeout=60
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            return result.stdout.strip()
+        else:
+            return "Рецепт не найден. Попробуйте другие ключевые слова."
+    except Exception as error:
+        return f"Ошибка поиска: {error}"
+
+def get_random_recipe():
+    try:
+        with open('/opt/simple-rag-script/documents/pokhlebkin.txt', 'r', encoding='utf-8') as file:
+            content = file.read()
+        recipes = content.split('\n\n')
+        random_recipe = random.choice(recipes).strip()
+        return random_recipe if random_recipe else "Не удалось найти случайный рецепт"
+    except Exception as error:
+        return f"Ошибка: {error}"
 
 @bot.message_handler(commands=['start'])
-def start(msg):
-    bot.send_message(msg.chat.id, f"Привет, {msg.from_user.first_name}! Я кулинарный бот.", reply_markup=menu())
+def welcome(message):
+    bot.send_message(message.chat.id, f"Привет, {message.from_user.first_name}! Я кулинарный бот. Рецепты беру из книги Похлёбкина.", reply_markup=main_menu())
 
-@bot.message_handler(func=lambda m: m.text == 'На ужин')
-def dinner(m):
-    bot.send_message(m.chat.id, "Секунду, процесс может занять где-то 1 минуты")
-    bot.send_message(m.chat.id, get_recipe("ужин из простых продуктов"))
+@bot.message_handler(func=lambda message: message.text == 'На ужин')
+def dinner(message):
+    bot.send_message(message.chat.id, "Ищу рецепт для ужина...")
+    recipe = get_recipe_from_book("ужин")
+    bot.send_message(message.chat.id, recipe)
 
-@bot.message_handler(func=lambda m: m.text == 'Десерт')
-def dessert(m):
-    bot.send_message(m.chat.id, "Секунду, процесс может занять где-то 1 минуты")
-    bot.send_message(m.chat.id, get_recipe("простой десерт"))
+@bot.message_handler(func=lambda message: message.text == 'Десерт')
+def dessert(message):
+    bot.send_message(message.chat.id, "Ищу десерт...")
+    recipe = get_recipe_from_book("десерт")
+    bot.send_message(message.chat.id, recipe)
 
-@bot.message_handler(func=lambda m: m.text == 'Случайный')
-def random_recipe(m):
-    bot.send_message(m.chat.id, "Секунду, процесс может занять где-то 1 минуты")
-    bot.send_message(m.chat.id, get_recipe("любое блюдо"))
+@bot.message_handler(func=lambda message: message.text == 'Случайный')
+def random_recipe(message):
+    bot.send_message(message.chat.id, "Выбираю случайный рецепт...")
+    recipe = get_random_recipe()
+    bot.send_message(message.chat.id, recipe)
 
-@bot.message_handler(func=lambda m: m.text == 'Ввести словами')
-def ask_products(m):
-    bot.send_message(m.chat.id, "Напиши продукты через запятую, например: картошка, лук, яйца")
+@bot.message_handler(func=lambda message: message.text == 'Ввести словами')
+def ask_ingredients(message):
+    bot.send_message(message.chat.id, "Напиши блюдо или ингредиенты, например: борщ, блины, картошка")
 
-@bot.message_handler(func=lambda m: True)
-def handle_text(msg):
-    if msg.text.startswith('/'):
+@bot.message_handler(func=lambda message: True)
+def handle_text(message):
+    if message.text.startswith('/'):
         return
-    if has_food(msg.text):
-        bot.send_message(msg.chat.id, f"Секунду, процесс может занять где-то 1 минуты .Ищу рецепт из: {msg.text}...")
-        bot.send_message(msg.chat.id, get_recipe(msg.text))
-    else:
-        bot.send_message(msg.chat.id, "Я понимаю только продукты. Пример: картошка, лук, яйца", reply_markup=menu())
-
-
-
-
-import re
-
-def clean_recipe(text):
-    text = text.replace('*', '')
-    english_words = ['Dill', 'Bay leaf', 'sour cream', 'épaissit', 'chicken', 'beef', 'apple', 'pepper', 'salt', 'sugar', 'milk', 'butter', 'egg', 'cheese', 'cream', 'water', 'pimienta', 'Olivenöl', 'Oliven', 'öl']
-    for word in english_words:
-       text = text.replace(word, '')
-    text = re.sub(r'\s+', ' ', text)
-    return text.strip()
-
-
-import re
-
-def clean_markdown(text):
-    text = re.sub(r'\*\*(.*?)\*\*', r'\1', text)
-    text = re.sub(r'\*(.*?)\*', r'\1', text)
-    text = re.sub(r'__(.*?)__', r'\1', text)
-    text = re.sub(r'_(.*?)_', r'\1', text)
-    text = re.sub(r'^\*\s+', '- ', text, flags=re.MULTILINE)
-    return text
+    if message.text in ['На ужин', 'Десерт', 'Случайный', 'Ввести словами']:
+        return
+    
+    bot.send_message(message.chat.id, f"Ищу: {message.text}...")
+    recipe = get_recipe_from_book(message.text)
+    bot.send_message(message.chat.id, recipe)
 
 if __name__ == '__main__':
-    print("Бот запущен...")
+    print("Бот запущен и работает с книгой рецептов")
     bot.polling(none_stop=True)
