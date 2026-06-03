@@ -48,17 +48,17 @@ def start(msg):
 
 @bot.message_handler(func=lambda m: m.text == 'На ужин')
 def dinner(m):
-    bot.send_message(m.chat.id, "Секунду, процесс может занять где-то 1 минуты")
+    bot.send_message(m.chat.id, "Секунду, процесс может занять где-то 3-4 минуты")
     bot.send_message(m.chat.id, get_recipe("ужин из простых продуктов"))
 
 @bot.message_handler(func=lambda m: m.text == 'Десерт')
 def dessert(m):
-    bot.send_message(m.chat.id, "Секунду, процесс может занять где-то 1 минуты")
+    bot.send_message(m.chat.id, "Секунду, процесс может занять где-то 3-4 минуты")
     bot.send_message(m.chat.id, get_recipe("простой десерт"))
 
 @bot.message_handler(func=lambda m: m.text == 'Случайный')
 def random_recipe(m):
-    bot.send_message(m.chat.id, "Секунду, процесс может занять где-то 1 минуты")
+    bot.send_message(m.chat.id, "Секунду, процесс может занять где-то 3-4 минуты")
     bot.send_message(m.chat.id, get_recipe("любое блюдо"))
 
 @bot.message_handler(func=lambda m: m.text == 'Ввести словами')
@@ -101,4 +101,3 @@ def clean_markdown(text):
 
 if __name__ == '__main__':
     print("Бот запущен...")
-    bot.polling(none_stop=True)
